@@ -1,0 +1,3 @@
+.markdown-source-view .cm-editor img.media-offload-resizable { cursor: ew-resize; }
+body.media-offload-resizing, body.media-offload-resizing * { cursor: ew-resize !important; user-select: none; }
+.markdown-source-view .cm-editor img.media-offload-dragging { width: var(--media-offload-width) !important; height: auto !important; max-width: none !important; }
