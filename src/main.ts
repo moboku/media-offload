@@ -8,6 +8,8 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	SettingDefinition,
+	SettingDefinitionItem,
 	TAbstractFile,
 	TFile,
 } from "obsidian";
@@ -386,69 +388,75 @@ export default class MediaOffloadPlugin extends Plugin {
 		let drag: { img: HTMLImageElement; view: EditorView; startX: number; startWidth: number; width: number | null } | null =
 			null;
 
-		this.registerDomEvent(
-			document,
-			"mousemove",
-			(e) => {
-				if (drag) {
-					const width = Math.max(60, Math.round(drag.startWidth + e.clientX - drag.startX));
-					drag.width = width;
-					drag.img.setCssProps({ "--media-offload-width": `${width}px` });
-					return;
-				}
-				const img = editorImg(e.target);
-				if (img) img.toggleClass("media-offload-resizable", nearEdge(img, e));
-			},
-			true,
-		);
+		// Bind on the main window and on every popout window, so resizing works everywhere.
+		const bind = (doc: Document): void => {
+			this.registerDomEvent(
+				doc,
+				"mousemove",
+				(e) => {
+					if (drag) {
+						const width = Math.max(60, Math.round(drag.startWidth + e.clientX - drag.startX));
+						drag.width = width;
+						drag.img.setCssProps({ "--media-offload-width": `${width}px` });
+						return;
+					}
+					const img = editorImg(e.target);
+					if (img) img.toggleClass("media-offload-resizable", nearEdge(img, e));
+				},
+				true,
+			);
 
-		this.registerDomEvent(
-			document,
-			"mousedown",
-			(e) => {
-				const img = editorImg(e.target);
-				if (e.button !== 0 || !img || !nearEdge(img, e)) return;
-				const view = EditorView.findFromDOM(img);
-				if (!view) return;
-				e.preventDefault();
-				e.stopPropagation();
-				img.addClass("media-offload-dragging");
-				drag = { img, view, startX: e.clientX, startWidth: img.getBoundingClientRect().width, width: null };
-				activeDocument.body.addClass("media-offload-resizing");
-			},
-			true,
-		);
-
-		this.registerDomEvent(
-			document,
-			"mouseup",
-			(e) => {
-				if (!drag) return;
-				const current = drag;
-				drag = null;
-				activeDocument.body.removeClass("media-offload-resizing");
-				current.img.removeClass("media-offload-dragging");
-				current.img.setCssProps({ "--media-offload-width": "" });
-				e.preventDefault();
-				e.stopPropagation();
-				if (current.width) this.writeWidth(current.view, current.img, current.width);
-			},
-			true,
-		);
-
-		// Swallow the click that follows a drag so the image doesn't open and the cursor doesn't jump.
-		this.registerDomEvent(
-			document,
-			"click",
-			(e) => {
-				const img = editorImg(e.target);
-				if (img && nearEdge(img, e)) {
+			this.registerDomEvent(
+				doc,
+				"mousedown",
+				(e) => {
+					const img = editorImg(e.target);
+					if (e.button !== 0 || !img || !nearEdge(img, e)) return;
+					const view = EditorView.findFromDOM(img);
+					if (!view) return;
 					e.preventDefault();
 					e.stopPropagation();
-				}
-			},
-			true,
-		);
+					img.addClass("media-offload-dragging");
+					drag = { img, view, startX: e.clientX, startWidth: img.getBoundingClientRect().width, width: null };
+					doc.body.addClass("media-offload-resizing");
+				},
+				true,
+			);
+
+			this.registerDomEvent(
+				doc,
+				"mouseup",
+				(e) => {
+					if (!drag) return;
+					const current = drag;
+					drag = null;
+					doc.body.removeClass("media-offload-resizing");
+					current.img.removeClass("media-offload-dragging");
+					current.img.setCssProps({ "--media-offload-width": "" });
+					e.preventDefault();
+					e.stopPropagation();
+					if (current.width) this.writeWidth(current.view, current.img, current.width);
+				},
+				true,
+			);
+
+			// Swallow the click that follows a drag so the image doesn't open and the cursor doesn't jump.
+			this.registerDomEvent(
+				doc,
+				"click",
+				(e) => {
+					const img = editorImg(e.target);
+					if (img && nearEdge(img, e)) {
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				},
+				true,
+			);
+	
+		};
+		bind(activeDocument);
+		this.registerEvent(this.app.workspace.on("window-open", (win) => bind(win.doc)));
 	}
 
 	private writeWidth(view: EditorView, img: HTMLImageElement, width: number): void {
@@ -495,6 +503,51 @@ class MediaOffloadSettingTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	/** Obsidian 1.13+: declarative settings, also indexed by the settings search. */
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const toggle = (name: string, desc: string, key: keyof Settings): SettingDefinition => ({
+			name,
+			desc,
+			control: { type: "toggle", key },
+		});
+		const exts = (name: string, key: keyof Settings): SettingDefinition => ({
+			name,
+			desc: t().sTypesDesc,
+			control: { type: "text", key },
+		});
+		return [
+			{
+				name: t().sFolder,
+				desc: t().sFolderDesc(this.plugin.root()),
+				control: { type: "text", key: "folder", placeholder: "~/Obsidian Media/" + this.app.vault.getName() },
+			},
+			toggle(t().sPasteDrop, t().sPasteDropDesc, "handlePasteDrop"),
+			toggle(t().sAutoMove, t().sAutoMoveDesc, "autoMoveAttachments"),
+			toggle(t().sDedupe, t().sDedupeDesc, "dedupeByContent"),
+			toggle(t().sDragResize, t().sDragResizeDesc, "dragResize"),
+			{
+				type: "group",
+				heading: t().sTypes,
+				items: [
+					exts(t().sImages, "imageExts"),
+					exts(t().sVideos, "videoExts"),
+					exts(t().sAudio, "audioExts"),
+				],
+			},
+		];
+	}
+
+	getControlValue(key: string): unknown {
+		return this.plugin.settings[key as keyof Settings];
+	}
+
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		const s = this.plugin.settings as unknown as Record<string, unknown>;
+		s[key] = key === "folder" && typeof value === "string" ? value.trim() : value;
+		await this.plugin.saveSettings();
+	}
+
+	/** Fallback for Obsidian before 1.13. */
 	display(): void {
 		const { containerEl } = this;
 		const s = this.plugin.settings;
