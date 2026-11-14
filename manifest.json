@@ -1,7 +1,7 @@
 {
 	"id": "media-offload",
 	"name": "Media Offload",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.8.7",
 	"description": "Keep your vault small. Pasted and dropped images and videos are saved to a folder outside the vault and linked, identical files are stored once, and attachments already in the vault can be moved out.",
 	"author": "Tang Mo",
