@@ -29,6 +29,15 @@
 - **Sync and backup don't cover the media folder.** Obsidian Sync, iCloud or Git syncing the vault won't copy it. Back it up yourself, or put it in a folder that is already backed up.
 - Moving an attachment out only rewrites links that Obsidian resolves to that exact file. If something fails partway, the notes it already changed are restored and the original file is left in place.
 
+## Disclosures
+
+This plugin uses Node.js `fs` to access files outside the vault, because that is what it is for. Exactly what it touches:
+
+- **Writes** only inside the media folder you set (default `~/Obsidian Media/<vault name>`): it creates the folder, writes each copied file through a temporary file in the same folder, and renames it into place.
+- **Reads** the media folder to find duplicates, and the file you paste, drop, or that is being moved out of the vault, to copy it.
+- **Never deletes** anything outside the vault. Only its own temporary files in the media folder are removed. Attachments moved out of the vault go to the trash through Obsidian.
+- No network requests, no telemetry, no ads.
+
 ## Install
 
 Until it's in the community plugin list, copy `main.js`, `manifest.json` and `styles.css` from the latest [release](../../releases) into `<vault>/.obsidian/plugins/media-offload/`, then enable **Media Offload** in **Settings → Community plugins**.
@@ -56,6 +65,15 @@ MIT
 - **相同文件只存一份**：用 SHA-256 哈希当文件名，同一张截图粘两次也只存一份。
 - **进了 vault 的附件自动搬出去**：别的插件、快速记录框或手动复制进来的图片视频，只要有笔记引用，就搬到媒体文件夹、改好链接，vault 里的那份放进回收站。也可以对打开的附件运行「把当前附件移出 vault」。
 - **编辑器里调图片大小**：拖图片右边缘，或用「调整当前图片宽度」命令（240 / 400 / 600 px / 原始尺寸）。
+
+**权限说明**
+
+插件用 Node.js 的 `fs` 读写 vault 外面的文件，这正是它的用途。具体只做这些：
+
+- **写**：只写你设置的媒体文件夹（默认 `~/Obsidian Media/<vault 名>`）。会建这个文件夹，先在里面写一个临时文件，再改名成正式文件。
+- **读**：读媒体文件夹（查重复），以及你粘贴、拖进来或要搬出 vault 的那个文件（为了复制）。
+- **不删** vault 外的任何东西，只清理自己在媒体文件夹里留下的临时文件。搬出 vault 的附件通过 Obsidian 放进回收站。
+- 不联网，不收集数据，没有广告。
 
 **使用前请注意**
 
