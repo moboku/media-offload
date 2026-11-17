@@ -4,6 +4,8 @@
 
 [中文说明](#中文说明)
 
+![Drop a photo: it is linked where it is. Paste a screenshot: it is saved to your media folder. Nothing is added to the vault.](docs/demo.gif)
+
 ## What it does
 
 - **Paste or drop, nothing lands in the vault.** Screenshots and images copied from the web are saved to your media folder (default `~/Obsidian Media/<vault name>`), and the note links to them.
