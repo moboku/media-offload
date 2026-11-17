@@ -1,55 +1,27 @@
 # Media Offload
 
-**Keep your vault small.** Images and videos you paste or drop into a note are saved to a folder *outside* the vault and linked from the note. Nothing is added to the vault, so it stays fast to sync, back up and version with Git.
+**Keep images and videos out of your vault.** Paste or drop one into a note: it shows up as usual, but the file is kept in a folder outside the vault. Your vault stays small and quick to sync and back up.
 
 [中文说明](#中文说明)
 
-## Features
+## What it does
 
-- **Paste and drop go outside the vault.** The file is copied to your media folder and an embed is inserted at the cursor: `![](file:///…)` for images, a `<video>` player for videos.
-- **Identical files are stored once.** Files are named by their SHA-256 hash, so pasting the same screenshot twice keeps one copy.
-- **Attachments that still land in the vault are moved out.** When another plugin, a capture prompt or a manual copy creates an image or video inside the vault and a note links to it, the plugin moves it to the media folder, rewrites the links and puts the vault copy in the trash. You can also run **Move current attachment out of the vault** on an open attachment.
-- **Resize images in the editor.** Drag the right edge of an image, or use the **Set image width** commands (240 / 400 / 600 px / original).
+- **Paste or drop, nothing lands in the vault.** Screenshots and images copied from the web are saved to your media folder (default `~/Obsidian Media/<vault name>`), and the note links to them.
+- **Or link files where they are.** Turn on **Link files from your computer where they are**, and a photo you drop from Finder or Explorer is linked in place, with no copy at all.
+- **Each file is stored once.** Paste the same image twice and you still have one file.
+- **Tidies up after other plugins.** If an image or video still ends up in the vault, it is moved to the media folder and the links are updated.
+- **Resize images** by dragging their right edge.
 
-## Settings
+## Good to know
 
-| Setting | Default |
-| --- | --- |
-| Media folder | `~/Obsidian Media/<vault name>` |
-| Store pasted and dropped media outside the vault | On |
-| Move new attachments out of the vault | On |
-| Find duplicates with other names | Off. Turn this on if you put files in the media folder yourself. |
-| Drag to resize images | On |
-| File types | png, jpg, jpeg, gif, webp, avif, svg, heic · mp4, mov, m4v, webm. Audio is off by default. |
+- Desktop only. Images don't show on mobile.
+- Links point to files on this computer. On another computer they show only if the files are at the same path.
+- Obsidian Sync, iCloud and Git don't copy the media folder. Keep it in a folder you already back up.
+- If you link files in place, moving, renaming or deleting the original breaks the link.
 
-## Before you use it
+## Privacy
 
-- **Desktop only.** The plugin writes to your file system.
-- **Links are absolute `file://` paths.** Media shows up on this computer, and on another computer only if the media folder sits at the same path. It does not show on mobile.
-- **Sync and backup don't cover the media folder.** Obsidian Sync, iCloud or Git syncing the vault won't copy it. Back it up yourself, or put it in a folder that is already backed up.
-- Moving an attachment out only rewrites links that Obsidian resolves to that exact file. If something fails partway, the notes it already changed are restored and the original file is left in place.
-
-## Disclosures
-
-This plugin uses Node.js `fs` to access files outside the vault, because that is what it is for. Exactly what it touches:
-
-- **Writes** only inside the media folder you set (default `~/Obsidian Media/<vault name>`): it creates the folder, writes each copied file through a temporary file in the same folder, and renames it into place.
-- **Reads** the media folder to find duplicates, and the file you paste, drop, or that is being moved out of the vault, to copy it.
-- **Never deletes** anything outside the vault. Only its own temporary files in the media folder are removed. Attachments moved out of the vault go to the trash through Obsidian.
-- No network requests, no telemetry, no ads.
-
-## Install
-
-Until it's in the community plugin list, copy `main.js`, `manifest.json` and `styles.css` from the latest [release](../../releases) into `<vault>/.obsidian/plugins/media-offload/`, then enable **Media Offload** in **Settings → Community plugins**.
-
-## Development
-
-```bash
-npm install
-npm run dev    # watch build
-npm run build  # type check + production build
-npm run lint
-```
+The plugin reads and writes files outside the vault, which is its job. It only writes inside your media folder, never deletes anything outside the vault (attachments it moves out of the vault go to Obsidian's trash), and makes no network requests.
 
 ## License
 
@@ -59,24 +31,19 @@ MIT
 
 ## 中文说明
 
-**让 vault 不再变大。** 粘贴或拖进笔记的图片、视频直接存到 vault **外面**的文件夹，笔记里只放引用。vault 里一个文件都不加，同步、备份、用 Git 管理都轻松。
+**图片和视频不进 vault。** 往笔记里粘贴或拖进图片，照常显示，但文件存在 vault 外面的文件夹里。vault 一直很小，同步、备份都快。
 
-- **粘贴、拖入直接存外面**：文件复制到媒体文件夹，在光标处插入引用。图片是 `![](file:///…)`，视频是 `<video>` 播放器。
-- **相同文件只存一份**：用 SHA-256 哈希当文件名，同一张截图粘两次也只存一份。
-- **进了 vault 的附件自动搬出去**：别的插件、快速记录框或手动复制进来的图片视频，只要有笔记引用，就搬到媒体文件夹、改好链接，vault 里的那份放进回收站。也可以对打开的附件运行「把当前附件移出 vault」。
-- **编辑器里调图片大小**：拖图片右边缘，或用「调整当前图片宽度」命令（240 / 400 / 600 px / 原始尺寸）。
+- **粘贴、拖入，vault 里不多文件**：截图、网页上复制的图片存到媒体文件夹（默认 `~/Obsidian Media/<vault 名>`），笔记里放链接。
+- **也可以直接引用原图**：打开「电脑里的文件直接引用原位置」，从访达或资源管理器拖进来的照片直接链接原文件，不复制。
+- **同一个文件只存一份**：同一张图粘两次，也只有一个文件。
+- **帮别的插件收拾**：如果还是有图片视频进了 vault，会自动搬到媒体文件夹并改好链接。
+- **拖图片右边缘调大小。**
 
-**权限说明**
+**注意**
 
-插件用 Node.js 的 `fs` 读写 vault 外面的文件，这正是它的用途。具体只做这些：
+- 只支持电脑，手机上看不到图。
+- 链接指向这台电脑上的文件，换电脑要路径相同才能显示。
+- Obsidian Sync、iCloud、Git 不会同步媒体文件夹，请放在本来就有备份的位置。
+- 直接引用原图时，原文件移动、改名或删掉，链接就失效。
 
-- **写**：只写你设置的媒体文件夹（默认 `~/Obsidian Media/<vault 名>`）。会建这个文件夹，先在里面写一个临时文件，再改名成正式文件。
-- **读**：读媒体文件夹（查重复），以及你粘贴、拖进来或要搬出 vault 的那个文件（为了复制）。
-- **不删** vault 外的任何东西，只清理自己在媒体文件夹里留下的临时文件。搬出 vault 的附件通过 Obsidian 放进回收站。
-- 不联网，不收集数据，没有广告。
-
-**使用前请注意**
-
-- 只支持桌面端。
-- 链接是绝对路径 `file://`。在这台电脑上能显示；换一台电脑，要媒体文件夹路径相同才能显示；手机上看不到。
-- 同步 vault 的工具（Obsidian Sync、iCloud、Git）不会同步媒体文件夹，请自己备份，或者放在已经有备份的位置。
+**隐私**：插件会读写 vault 外的文件，这是它的用途。只写你的媒体文件夹，不删 vault 外的任何东西（搬出 vault 的附件放进 Obsidian 回收站），不联网。

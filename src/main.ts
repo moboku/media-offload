@@ -29,6 +29,7 @@ interface Settings {
 	videoExts: string;
 	audioExts: string;
 	handlePasteDrop: boolean;
+	linkInPlace: boolean;
 	autoMoveAttachments: boolean;
 	dedupeByContent: boolean;
 	dragResize: boolean;
@@ -40,6 +41,7 @@ const DEFAULT_SETTINGS: Settings = {
 	videoExts: "mp4, mov, m4v, webm",
 	audioExts: "",
 	handlePasteDrop: true,
+	linkInPlace: false,
 	autoMoveAttachments: true,
 	dedupeByContent: false,
 	dragResize: true,
@@ -74,6 +76,18 @@ const isMissing = (e: unknown): boolean => (e as NodeJS.ErrnoException)?.code ==
 
 /** Obsidian gives dropped files a `path` on desktop. */
 type DesktopFile = File & { path?: string };
+
+/** Absolute path of a file dropped or pasted from Finder/Explorer; empty for clipboard image data. */
+function diskPath(file: DesktopFile): string {
+	if (file.path) return file.path;
+	try {
+		// Electron 32+ removed File.path; webUtils replaces it.
+		const { webUtils } = require("electron") as { webUtils?: { getPathForFile(f: File): string } };
+		return webUtils?.getPathForFile(file) ?? "";
+	} catch {
+		return "";
+	}
+}
 
 export default class MediaOffloadPlugin extends Plugin {
 	settings!: Settings;
@@ -199,11 +213,14 @@ export default class MediaOffloadPlugin extends Plugin {
 				const ext = this.kindOf(file.name) ? fromName : (MIME_EXT[file.type] ?? fromName);
 				const kind = this.kinds.get(ext);
 				if (!kind) continue;
-				const onDisk = file.path ? await fsp.stat(file.path).then((s) => s.isFile(), () => false) : false;
-				const target =
-					onDisk && file.path
-						? await this.storePath(file.path, ext)
-						: await this.storeBuffer(Buffer.from(await file.arrayBuffer()), ext);
+				const src = diskPath(file);
+				const onDisk = src ? await fsp.stat(src).then((s) => s.isFile(), () => false) : false;
+				// A file from Finder can be linked where it is; clipboard image data has no file, so it is stored.
+				const target = !onDisk
+					? await this.storeBuffer(Buffer.from(await file.arrayBuffer()), ext)
+					: this.settings.linkInPlace
+						? src
+						: await this.storePath(src, ext);
 				links.push(this.embed(target, kind));
 			} catch (e) {
 				console.error(e);
@@ -522,6 +539,7 @@ class MediaOffloadSettingTab extends PluginSettingTab {
 				control: { type: "text", key: "folder", placeholder: "~/Obsidian Media/" + this.app.vault.getName() },
 			},
 			toggle(t().sPasteDrop, t().sPasteDropDesc, "handlePasteDrop"),
+			toggle(t().sLinkInPlace, t().sLinkInPlaceDesc, "linkInPlace"),
 			toggle(t().sAutoMove, t().sAutoMoveDesc, "autoMoveAttachments"),
 			toggle(t().sDedupe, t().sDedupeDesc, "dedupeByContent"),
 			toggle(t().sDragResize, t().sDragResizeDesc, "dragResize"),
@@ -573,6 +591,16 @@ class MediaOffloadSettingTab extends PluginSettingTab {
 			.addToggle((x) =>
 				x.setValue(s.handlePasteDrop).onChange(async (v) => {
 					s.handlePasteDrop = v;
+					await save();
+				}),
+			);
+
+		new Setting(containerEl)
+			.setName(t().sLinkInPlace)
+			.setDesc(t().sLinkInPlaceDesc)
+			.addToggle((x) =>
+				x.setValue(s.linkInPlace).onChange(async (v) => {
+					s.linkInPlace = v;
 					await save();
 				}),
 			);

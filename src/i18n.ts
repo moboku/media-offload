@@ -17,6 +17,9 @@ const en = {
 		`Absolute path outside the vault. ~ means your home folder. Leave empty for the default. Currently: ${p}`,
 	sPasteDrop: "Store pasted and dropped media outside the vault",
 	sPasteDropDesc: "Media you paste or drop into a note is saved to the media folder and linked, so nothing is added to the vault.",
+	sLinkInPlace: "Link files from your computer where they are",
+	sLinkInPlaceDesc:
+		"Files you drop or paste from Finder or Explorer are linked at their current location instead of copied. If you later move, rename or delete the original, the link breaks. Pasted screenshots and images copied from the web have no file, so they are still saved to the media folder.",
 	sAutoMove: "Move new attachments out of the vault",
 	sAutoMoveDesc:
 		"When an image or video is created inside the vault and a note links to it, move it to the media folder, update the links and move the vault copy to the trash.",
@@ -50,6 +53,8 @@ const zh: Strings = {
 	sFolderDesc: (p) => `vault 外面的绝对路径，~ 代表个人目录；留空用默认位置。当前：${p}`,
 	sPasteDrop: "粘贴、拖入的媒体存到 vault 外面",
 	sPasteDropDesc: "粘贴或拖进笔记的图片视频直接存到媒体文件夹再引用，vault 里不增加文件。",
+	sLinkInPlace: "电脑里的文件直接引用原位置",
+	sLinkInPlaceDesc: "从访达或资源管理器拖入、粘贴的文件不复制，直接链接到原文件。之后移动、改名或删除原文件，链接就会失效。截图和网页上复制的图片没有原文件，仍然存到媒体文件夹。",
 	sAutoMove: "把新进 vault 的附件移出去",
 	sAutoMoveDesc: "vault 里新出现的图片视频，只要有笔记引用，就搬到媒体文件夹、改好链接，vault 里的那份放进回收站。",
 	sDedupe: "按内容查找改过名的重复文件",
